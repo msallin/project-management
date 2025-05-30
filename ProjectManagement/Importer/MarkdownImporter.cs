@@ -31,7 +31,7 @@ namespace ProjectManagement.Importer
             TaskNode? current = null;
 
             var depRegex = new Regex(@"@\(([0-9\.]+)\)");
-            var tagRegex = new Regex(@"(?<!\S)#([A-Za-z0-9_]+)");
+            var tagRegex = new Regex(@"(?<!\S)#([A-Za-z0-9_:]+)");
 
             foreach (var raw in lines)
             {
