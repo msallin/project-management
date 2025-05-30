@@ -1,21 +1,23 @@
 ﻿using ProjectManagement.Core;
-using ProjectManagement.Renderer;
+using ProjectManagement.Importer;
 
-namespace ProjectManagement.Demo;
+namespace ProjectManagement;
 
-public class DemoFromCode
+public static class Demo
 {
-    public static void Execute()
+    public static ProjectGraph LoadFromCode()
     {
-        Console.WriteLine("Project Management Application - Code Example");
         ProjectGraph project = new();
         ExampleData(project);
-        Console.WriteLine("--- Markdown Table ---" + Environment.NewLine + project.Export(new MarkdownTableVisitor()));
-        Console.WriteLine("--- PlantUML WBS ---" + Environment.NewLine + project.Export(new PlantUmlWbsVisitor()));
-        Console.WriteLine("--- PlantUML Gantt ---" + Environment.NewLine + project.ExportTopologicalSort(new PlantUmlGanttVisitor()));
-        Console.WriteLine("--- DOT ---" + Environment.NewLine + project.Export(new DotVisitor()));
-        Console.WriteLine("--- Mermaid ---" + Environment.NewLine + project.Export(new MermaidVisitor()));
-        Console.WriteLine("--- PlantUML Dep ---" + Environment.NewLine + project.Export(new PlantUmlDependencyVisitor()));
+        return project;
+    }
+
+    public static ProjectGraph LoadFromMarkdown()
+    {
+        ProjectGraph project = new();
+        var markdownImporter = new MarkdownImporter();
+        markdownImporter.ImportFile("MoonMissionRoadmap.md", project);
+        return project;
     }
 
     private static void ExampleData(ProjectGraph project)

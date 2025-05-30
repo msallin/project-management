@@ -1,9 +1,9 @@
-﻿# 1 Mission Definition #mission
+﻿# 1 Mission Definition
 
 Define the overall objectives and scope of the lunar mission.  
 This includes defining mission phases, crew responsibilities, and timelines.
 
-## 1.1 Requirements Definition #requirements
+## 1.1 Requirements Definition
 
 Gather and formalize mission requirements.  
 Ensure that all technical and safety requirements are captured.  
