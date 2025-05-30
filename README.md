@@ -2,8 +2,8 @@
 
 A .NET-based project-planning library and console application that lets you:
 
+- **Model** tasks as a hybrid WBS + directed-acyclic graph (DAG) with dependencies, descriptions and tags in code  
 - **Import** your work-breakdown structure (WBS) from Markdown files  
-- **Model** tasks as a hybrid WBS + directed-acyclic graph (DAG) with dependencies, descriptions and tags  
 - **Export** to multiple formats (Markdown tables, PlantUML WBS & Gantt, GraphViz DOT, Mermaid, PlantUML dependency diagrams)  
 - **Analyze** critical paths  
 
@@ -17,8 +17,9 @@ A .NET-based project-planning library and console application that lets you:
   - Multiline task descriptions from paragraphs under headings
 
 - **Inline markers**  
-  - `@(X.Y…)` in text → dependency on task with ID `X.Y…`  
-  - `#tagName` anywhere in text → adds a tag to the current task  
+  - `@(X.Y…)` in text → dependency on task with ID `X.Y…`  (e.g., `@(1.1.1)`))
+  - `#tagName` anywhere in text → adds a tag to the current task (e.g., `#critical`, `#feasibility`)  
+  - `#color:blue` → sets task color on export (e.g., `#color:red` for critical tasks)
 
 - **Unified in-memory model**  
   - `TaskNode` objects hold `Id`, `Name`, `Description`, `Tags`, `Children` (WBS), `Dependencies` (DAG)  
@@ -26,6 +27,7 @@ A .NET-based project-planning library and console application that lets you:
 
 - **Visitor-based exporters**  
   - **`MarkdownTableVisitor`** → plain Markdown task table  
+  - **`MindMapVisitor`** → `@startmindmap` tasks by tag Mindmap diagram
   - **`PlantUmlWbsVisitor`** → `@startwbs`…`@endwbs` WBS diagram  
   - **`PlantUmlGanttVisitor`** → `@startgantt`… Gantt chart  
   - **`DotVisitor`** → GraphViz `.dot` directed graph  
@@ -47,7 +49,7 @@ A .NET-based project-planning library and console application that lets you:
 ### Installation
 
 ```bash
-git clone https://github.com/your-org/project-management-toolkit.git
-cd project-management-toolkit
+git clone https://github.com/msallin/project-management.git
+cd project-management
 dotnet restore
 dotnet build
