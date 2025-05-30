@@ -4,14 +4,16 @@ using ProjectManagement.Renderer;
 
 Console.WriteLine("Project Management Application");
 
-ProjectGraph project = Demo.LoadFromMarkdown();
-//project = Demo.LoadFromCode();
+ProjectGraph project = Demo.LoadFromCode();
+project = Demo.LoadFromMarkdown();
 
-Console.WriteLine(project.Export(new MindmapTagVisitor()));
-Console.WriteLine(project.Export(new MarkdownTableVisitor()));
-Console.WriteLine(project.Export(new PlantUmlWbsVisitor()));
-Console.WriteLine(project.ExportTopologicalSort(new PlantUmlGanttVisitor()));
-Console.WriteLine(project.Export(new DotVisitor()));
-Console.WriteLine(project.Export(new MermaidVisitor()));
-Console.WriteLine(project.Export(new PlantUmlDependencyVisitor()));
-Console.WriteLine(project.Export(new CriticalPathVisitor(project)));
+var directory = Directory.CreateDirectory("./output");
+File.WriteAllText("./output/mindmap.puml", project.Export(new MindmapTagVisitor()));
+File.WriteAllText("./output/wbs.puml", project.Export(new PlantUmlWbsVisitor()));
+File.WriteAllText("./output/gantt.puml", project.ExportTopologicalSort(new PlantUmlGanttVisitor()));
+File.WriteAllText("./output/dependencies.puml", project.Export(new PlantUmlDependencyVisitor()));
+File.WriteAllText("./output/table.md", project.Export(new MarkdownTableVisitor()));
+File.WriteAllText("./output/dag.gv", project.Export(new DotVisitor()));
+File.WriteAllText("./output/mermaid", project.Export(new MermaidVisitor()));
+File.WriteAllText("./output/criticalpath.md", project.Export(new CriticalPathVisitor(project)));
+Console.WriteLine($"Exported to: {directory.FullName}");
