@@ -5,8 +5,9 @@ using ProjectManagement.Renderer;
 Console.WriteLine("Project Management Application");
 
 ProjectGraph project = Demo.LoadFromMarkdown();
-project = Demo.LoadFromCode();
+//project = Demo.LoadFromCode();
 
+Console.WriteLine(project.Export(new MindmapTagVisitor()));
 Console.WriteLine(project.Export(new MarkdownTableVisitor()));
 Console.WriteLine(project.Export(new PlantUmlWbsVisitor()));
 Console.WriteLine(project.ExportTopologicalSort(new PlantUmlGanttVisitor()));

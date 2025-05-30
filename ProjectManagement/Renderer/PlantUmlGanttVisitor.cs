@@ -15,7 +15,13 @@ public class PlantUmlGanttVisitor : IProjectVisitor, IResultProvider
     {
         var id = Escape(node.Id);
         var name = Escape(node.Name);
-        _sb.AppendLine($"[{id} {name}] lasts {node.Duration.TotalDays} day");
+        _sb.Append($"[{id} {name}] lasts {node.Duration.TotalDays} day");
+        if (node.Tags.GetColor(out string? color))
+        {
+            _sb.Append($" and is colored in {color}");
+        }
+        _sb.AppendLine();
+
         foreach (var rel in node.Relations)
         {
             foreach (var tgt in rel.Value)

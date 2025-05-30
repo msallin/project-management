@@ -1,6 +1,7 @@
 ﻿# 1 Mission Definition
 
 Define the overall objectives and scope of the lunar mission.  
+And there is #color:blue  
 This includes defining mission phases, crew responsibilities, and timelines.
 
 ## 1.1 Requirements Definition
@@ -20,10 +21,12 @@ Plan stakeholder meeting logistics and prepare questionnaires.
 #### 1.1.1.2 Conduct Interviews
 
 Conduct interviews with stakeholders to collect requirements. Depends on @(1.1.1.1) #critical
+#color:red
 
 ### 1.1.2 Requirement Documentation
 
-Compile all requirements into a formal document.
+Compile all #requirements into a formal document.
+#color:blue test
 
 #### 1.1.2.1 Draft Requirements Document
 
@@ -202,3 +205,4 @@ Configure the ground telemetry network and feeds.
 #### 4.1.1.2 Analyze Flight Data
 
 Analyze live flight data to assess mission health. Depends on @(4.1.1.1)
+#color:blue

@@ -18,6 +18,10 @@ public class PlantUmlWbsVisitor : IProjectVisitor, IResultProvider
         var id = Escape(node.Id);
         var name = Escape(node.Name);
         _sb.Append('*', level + 1);
+        if (node.Tags.GetColor(out string? color))
+        {
+            _sb.Append($"[#{Escape(color)}]");
+        }
         _sb.Append(' ');
         _sb.AppendLine($"{id} {name}");
     }

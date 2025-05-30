@@ -25,14 +25,20 @@ public class MindmapTagVisitor : IProjectVisitor, IResultProvider
         {
             foreach (var tag in node.Tags)
             {
+                // Skip control tags
+                if (tag.IsControlTag())
+                {
+                    continue;
+                }
+
                 // Emit the tag header once
                 if (_emittedTags.Add(tag))
                 {
                     _sb.AppendLine($"* {Escape(tag)}");
                 }
 
-                // Emit the task under that tag
-                _sb.AppendLine($"** {label}");
+                AddTask(node, label);
+
             }
         }
         else
@@ -43,8 +49,19 @@ public class MindmapTagVisitor : IProjectVisitor, IResultProvider
                 _sb.AppendLine("* Untagged");
                 _untaggedEmitted = true;
             }
-            _sb.AppendLine($"** {label}");
+
+            AddTask(node, label);
         }
+    }
+
+    private void AddTask(TaskNode node, string label)
+    {
+        _sb.Append($"**"); // Start the sub-task under this tag
+        if (node.Tags.GetColor(out string? color)) // If the tag has a color, apply it
+        {
+            _sb.Append($"[#{Escape(color)}]");
+        }
+        _sb.AppendLine($" {label}"); // Emit the task under that tag
     }
 
     public void End() => _sb.AppendLine("@endmindmap");

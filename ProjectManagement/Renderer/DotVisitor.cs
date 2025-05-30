@@ -14,13 +14,14 @@ namespace ProjectManagement.Renderer
         public void Start()
         {
             _sb.AppendLine("digraph Project {");
-            _sb.AppendLine("  node [shape=box];");
+            _sb.AppendLine("  node [shape=box style=filled, fillcolor=\"white\", color=\"black\"]");
         }
 
         public void Visit(TaskNode node, int level)
         {
             var nodeLabel = GetLabel(node.Id, node.Name);
-            _sb.AppendLine($"    {nodeLabel};");
+            var fill = node.Tags.GetColor(out string? color) ? color : "white";
+            _sb.AppendLine($"    {nodeLabel} [style=filled, fillcolor=\"{fill}\", color=\"black\"];");
 
             // Parent-child "contains" edges
             foreach (var child in node.Children)

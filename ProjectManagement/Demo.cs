@@ -26,9 +26,10 @@ public static class Demo
         var t1 = project.AddTask(
             "1",
             "Mission Definition",
-            "Define the overall objectives and scope of the lunar mission. " +
+            "Define the overall objectives and scope of the lunar mission." +
             "This includes defining mission phases, crew responsibilities, and timelines."
         );
+        t1.AddTag("color:blue");
         t1.AddTag("mission");
         t1.AddTag("planning");
 
@@ -37,9 +38,11 @@ public static class Demo
             "1.1",
             "Requirements Definition",
             "Gather and formalize mission requirements. " +
-            "Ensure that all technical and safety requirements are captured. " +
+            "Ensure that all technical and safety requirements are captured." +
+            "#color:red " +
             "Document constraints and interfaces with ground systems."
         );
+        t1.AddTag("color:red");
         t1_1.AddTag("requirements");
         project.AddChild(t1.Id, t1_1.Id);
 
