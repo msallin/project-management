@@ -15,6 +15,12 @@ public class PlantUmlWbsVisitor : IProjectVisitor, IResultProvider
     }
     public void Visit(TaskNode node, int level)
     {
+        if(node.Tags.IsMilestone(out _))
+        {
+            // If the node is a milestone, we don't want to emit it in WBS format
+            return;
+        }
+
         string id = Escape(node.Id);
         string name = Escape(node.Name);
         _sb.Append('*', level + 1);
