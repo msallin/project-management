@@ -1,6 +1,6 @@
 ﻿namespace ProjectManagement.Core;
 
-public partial class ProjectGraph
+public class ProjectGraph()
 {
     private readonly Dictionary<string, TaskNode> _nodes = [];
 

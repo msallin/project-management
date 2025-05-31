@@ -59,7 +59,7 @@ public class MindmapTagVisitor : IProjectVisitor, IResultProvider
         _sb.Append($"**"); // Start the sub-task under this tag
         if (node.Tags.GetColor(out string? color)) // If the tag has a color, apply it
         {
-            _sb.Append($"[#{Escape(color)}]");
+            _sb.Append($"[#{Escape(color!)}]");
         }
         _sb.AppendLine($" {label}"); // Emit the task under that tag
     }
