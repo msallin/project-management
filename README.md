@@ -1,5 +1,11 @@
 ﻿# Project Management Toolkit
 
+As a software architect, I often face the challenge of parallel projects that need alignment. 
+For this, I require multiple representations of the same tasks — each tailored to different stakeholders. 
+Since tasks inherently form a graph, I wanted a unified in-memory model that I can build programmatically or via Markdown. 
+Then, I needed to generate various artifacts from that model. Generation is done using a visitor pattern so that it remains extensible.
+So that I can create specialized visitors later for specific stakeholder needs or contexts.
+
 A .NET-based project-planning library and console application that lets you:
 
 - **Model** tasks as a hybrid WBS + directed-acyclic graph (DAG) with dependencies, descriptions and tags in code  
