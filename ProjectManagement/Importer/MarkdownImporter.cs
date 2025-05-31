@@ -45,6 +45,7 @@ namespace ProjectManagement.Importer
                     continue;
                 }
 
+                // Match Markdown headings:  "#" characters followed by a space and then the text.
                 Match m = Regex.Match(line, @"^(#+)\s+(.*)$");
                 if (m.Success)
                 {
@@ -52,24 +53,27 @@ namespace ProjectManagement.Importer
                     string rest = m.Groups[2].Value.Trim();
                     string id, title;
 
+                    // If the heading text starts with a numeric ID (e.g. "1" or "1.2.3"), extract it.
                     Match numM = Regex.Match(rest, @"^(\d+(?:\.\d+)*)\s+(.*)$");
                     if (numM.Success)
                     {
-                        int[] segs = numM.Groups[1].Value
+                        // Explicit ID was provided in the heading.
+                        id = numM.Groups[1].Value;
+                        title = numM.Groups[2].Value.Trim(); // <-- Exclude the numeric prefix from the title
+
+                        // Update the level counters based on the provided segments
+                        int[] segs = id
                                      .Split('.', StringSplitOptions.RemoveEmptyEntries)
                                      .Select(int.Parse)
                                      .ToArray();
-
                         for (int i = 1; i <= level; i++)
                         {
                             levelCounters[i] = (i <= segs.Length) ? segs[i - 1] : 0;
                         }
-
-                        title = numM.Groups[2].Value.Trim();
-                        id = numM.Groups[1].Value;
                     }
                     else
                     {
+                        // No explicit numeric ID in the heading: auto-generate based on levelCounters
                         int prev = levelCounters.TryGetValue(level, out int cnt) ? cnt : 0;
                         levelCounters[level] = prev + 1;
                         title = rest;
@@ -78,19 +82,21 @@ namespace ProjectManagement.Importer
                                             .Select(l => levelCounters[l].ToString()));
                     }
 
-                    // reset deeper levels
+                    // Reset counters and stack entries for deeper levels than the current one
                     foreach (int d in levelCounters.Keys.Where(l => l > level).ToList())
                     {
                         levelCounters.Remove(d);
                     }
-
                     foreach (int d in headingStack.Keys.Where(l => l > level).ToList())
                     {
                         headingStack.Remove(d);
                     }
 
+                    // Add the new TaskNode using the extracted ID and the cleaned-up title
                     current = graph.AddTask(id, title);
                     headingStack[level] = current;
+
+                    // Link to its parent (if any)
                     if (level > 1 && headingStack.TryGetValue(level - 1, out TaskNode? parent))
                     {
                         graph.AddChild(parent.Id, id);
@@ -98,19 +104,19 @@ namespace ProjectManagement.Importer
                 }
                 else if (current != null)
                 {
-                    // 1) collect dependencies
+                    // 1) Collect dependencies from lines (e.g. @(1.2.3))
                     foreach (Match dm in depRegex.Matches(line))
                     {
                         pendingDeps.Add((dm.Groups[1].Value, current.Id));
                     }
 
-                    // 2) collect tags
+                    // 2) Collect tags (#tagName)
                     foreach (Match tm in tagRegex.Matches(line))
                     {
                         current.AddTag(tm.Groups[1].Value);
                     }
 
-                    // 3) clean out markers from description
+                    // 3) Clean out markers (dependencies and tags) before appending to description
                     string cleaned = depRegex.Replace(line, "");
                     cleaned = tagRegex.Replace(cleaned, "").Trim();
                     if (!string.IsNullOrEmpty(cleaned))
@@ -122,7 +128,7 @@ namespace ProjectManagement.Importer
                 }
             }
 
-            // resolve dependencies
+            // Resolve all collected dependencies
             foreach ((string fromId, string toId) in pendingDeps)
             {
                 if (graph.TryGetTask(fromId, out _))
