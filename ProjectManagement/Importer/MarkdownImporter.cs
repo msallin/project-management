@@ -15,9 +15,13 @@ namespace ProjectManagement.Importer
     {
         public void Import(IEnumerable<string> directories, ProjectGraph graph)
         {
-            foreach (var dir in directories)
-                foreach (var file in Directory.GetFiles(dir, "*.md", SearchOption.AllDirectories))
+            foreach (string dir in directories)
+            {
+                foreach (string file in Directory.GetFiles(dir, "*.md", SearchOption.AllDirectories))
+                {
                     ImportFile(file, graph);
+                }
+            }
         }
 
         public void ImportFile(string path, ProjectGraph graph)
@@ -33,34 +37,40 @@ namespace ProjectManagement.Importer
             var depRegex = new Regex(@"@\(([0-9\.]+)\)");
             var tagRegex = new Regex(@"(?<!\S)#([A-Za-z0-9_:]+)");
 
-            foreach (var raw in lines)
+            foreach (string raw in lines)
             {
-                var line = raw.TrimEnd();
+                string line = raw.TrimEnd();
                 if (string.IsNullOrWhiteSpace(line))
+                {
                     continue;
+                }
 
-                var m = Regex.Match(line, @"^(#+)\s+(.*)$");
+                Match m = Regex.Match(line, @"^(#+)\s+(.*)$");
                 if (m.Success)
                 {
                     int level = m.Groups[1].Value.Length;
-                    var rest = m.Groups[2].Value.Trim();
+                    string rest = m.Groups[2].Value.Trim();
                     string id, title;
 
-                    var numM = Regex.Match(rest, @"^(\d+(?:\.\d+)*)\s+(.*)$");
+                    Match numM = Regex.Match(rest, @"^(\d+(?:\.\d+)*)\s+(.*)$");
                     if (numM.Success)
                     {
-                        var segs = numM.Groups[1].Value
+                        int[] segs = numM.Groups[1].Value
                                      .Split('.', StringSplitOptions.RemoveEmptyEntries)
                                      .Select(int.Parse)
                                      .ToArray();
+
                         for (int i = 1; i <= level; i++)
+                        {
                             levelCounters[i] = (i <= segs.Length) ? segs[i - 1] : 0;
+                        }
+
                         title = numM.Groups[2].Value.Trim();
                         id = numM.Groups[1].Value;
                     }
                     else
                     {
-                        int prev = levelCounters.TryGetValue(level, out var cnt) ? cnt : 0;
+                        int prev = levelCounters.TryGetValue(level, out int cnt) ? cnt : 0;
                         levelCounters[level] = prev + 1;
                         title = rest;
                         id = string.Join(".",
@@ -69,28 +79,39 @@ namespace ProjectManagement.Importer
                     }
 
                     // reset deeper levels
-                    foreach (var d in levelCounters.Keys.Where(l => l > level).ToList())
+                    foreach (int d in levelCounters.Keys.Where(l => l > level).ToList())
+                    {
                         levelCounters.Remove(d);
-                    foreach (var d in headingStack.Keys.Where(l => l > level).ToList())
+                    }
+
+                    foreach (int d in headingStack.Keys.Where(l => l > level).ToList())
+                    {
                         headingStack.Remove(d);
+                    }
 
                     current = graph.AddTask(id, title);
                     headingStack[level] = current;
-                    if (level > 1 && headingStack.TryGetValue(level - 1, out var parent))
+                    if (level > 1 && headingStack.TryGetValue(level - 1, out TaskNode? parent))
+                    {
                         graph.AddChild(parent.Id, id);
+                    }
                 }
                 else if (current != null)
                 {
                     // 1) collect dependencies
                     foreach (Match dm in depRegex.Matches(line))
+                    {
                         pendingDeps.Add((dm.Groups[1].Value, current.Id));
+                    }
 
                     // 2) collect tags
                     foreach (Match tm in tagRegex.Matches(line))
+                    {
                         current.AddTag(tm.Groups[1].Value);
+                    }
 
                     // 3) clean out markers from description
-                    var cleaned = depRegex.Replace(line, "");
+                    string cleaned = depRegex.Replace(line, "");
                     cleaned = tagRegex.Replace(cleaned, "").Trim();
                     if (!string.IsNullOrEmpty(cleaned))
                     {
@@ -102,12 +123,16 @@ namespace ProjectManagement.Importer
             }
 
             // resolve dependencies
-            foreach (var (fromId, toId) in pendingDeps)
+            foreach ((string fromId, string toId) in pendingDeps)
             {
                 if (graph.TryGetTask(fromId, out _))
+                {
                     graph.AddDependency(fromId, toId);
+                }
                 else
+                {
                     throw new KeyNotFoundException($"Dependency reference '{fromId}' not found.");
+                }
             }
         }
     }

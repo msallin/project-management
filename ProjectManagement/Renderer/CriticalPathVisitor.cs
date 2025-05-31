@@ -32,7 +32,7 @@ public class CriticalPathVisitor(ProjectGraph graph) : IProjectVisitor, IResultP
         // 2) build Markdown table of results
         _sb.AppendLine("| ID | Name | Dur | ES | EF | LS | LF | Slack |");
         _sb.AppendLine("|---|---|---|---|---|---|---|---|");
-        foreach (var node in _result.ES.Keys.OrderBy(n => _result.ES[n]))
+        foreach (TaskNode? node in _result.ES.Keys.OrderBy(n => _result.ES[n]))
         {
             _sb.AppendLine(
                 $"| {Escape(node.Id)} " +
@@ -59,14 +59,14 @@ public class CriticalPathVisitor(ProjectGraph graph) : IProjectVisitor, IResultP
 
     public CriticalPathResult AnalyzeCriticalPath()
     {
-        var sorted = _graph.TopologicalSort();
+        List<TaskNode> sorted = _graph.TopologicalSort();
 
         // Forward pass
         var ES = new Dictionary<TaskNode, TimeSpan>();
         var EF = new Dictionary<TaskNode, TimeSpan>();
-        foreach (var node in sorted)
+        foreach (TaskNode node in sorted)
         {
-            var earliest = node.Dependencies.Any()
+            TimeSpan earliest = node.Dependencies.Any()
               ? node.Dependencies.Max(p => EF[p])
               : TimeSpan.Zero;
             ES[node] = earliest;
@@ -74,12 +74,12 @@ public class CriticalPathVisitor(ProjectGraph graph) : IProjectVisitor, IResultP
         }
 
         // Backward pass
-        var projectFinish = EF.Values.Max();
+        TimeSpan projectFinish = EF.Values.Max();
         var LS = new Dictionary<TaskNode, TimeSpan>();
         var LF = new Dictionary<TaskNode, TimeSpan>();
-        foreach (var node in sorted.Reverse<TaskNode>())
+        foreach (TaskNode node in sorted.Reverse<TaskNode>())
         {
-            var successors = sorted.Where(n => n.Dependencies.Contains(node));
+            IEnumerable<TaskNode> successors = sorted.Where(n => n.Dependencies.Contains(node));
             if (successors.Any())
             {
                 LF[node] = successors.Min(s => LS[s]);
@@ -94,13 +94,13 @@ public class CriticalPathVisitor(ProjectGraph graph) : IProjectVisitor, IResultP
 
         // Slack and extract critical path
         var slack = new Dictionary<TaskNode, TimeSpan>();
-        foreach (var node in sorted)
+        foreach (TaskNode node in sorted)
         {
             slack[node] = LS[node] - ES[node];
         }
 
         var critical = new List<TaskNode>();
-        var cursor = sorted.FirstOrDefault(n => ES[n] == TimeSpan.Zero && slack[n] == TimeSpan.Zero);
+        TaskNode? cursor = sorted.FirstOrDefault(n => ES[n] == TimeSpan.Zero && slack[n] == TimeSpan.Zero);
         while (cursor != null)
         {
             critical.Add(cursor);

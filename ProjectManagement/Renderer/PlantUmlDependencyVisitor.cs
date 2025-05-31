@@ -13,19 +13,19 @@ public class PlantUmlDependencyVisitor : IProjectVisitor, IResultProvider
 
     public void Visit(TaskNode node, int level)
     {
-        var nodeLabel = $"{Escape(node.Id)}: {Escape(node.Name)}";
+        string nodeLabel = $"{Escape(node.Id)}: {Escape(node.Name)}";
 
-        foreach (var dep in node.Dependencies)
+        foreach (TaskNode dep in node.Dependencies)
         {
-            var depLabel = $"{Escape(dep.Id)}: {Escape(dep.Name)}";
+            string depLabel = $"{Escape(dep.Id)}: {Escape(dep.Name)}";
             _sb.AppendLine($"[{depLabel}] --> [{nodeLabel}]");
         }
 
-        foreach (var rel in node.Relations)
+        foreach (KeyValuePair<string, HashSet<TaskNode>> rel in node.Relations)
         {
-            foreach (var target in rel.Value)
+            foreach (TaskNode target in rel.Value)
             {
-                var targetLabel = $"{Escape(target.Id)}: {Escape(target.Name)}";
+                string targetLabel = $"{Escape(target.Id)}: {Escape(target.Name)}";
                 _sb.AppendLine($"[{nodeLabel}] -[#blue]-> [{targetLabel}] : {Escape(rel.Key)}");
             }
         }

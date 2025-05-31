@@ -15,9 +15,9 @@ public class MarkdownTableVisitor : IProjectVisitor, IResultProvider
     }
     public void Visit(TaskNode node, int level)
     {
-        var desc = Escape(node.Description);
-        var tags = string.Join(",", node.Tags);
-        var rels = string.Join(", ", node.Relations.SelectMany(r => r.Value.Select(t => $"{r.Key}:{t.Id}")));
+        string desc = Escape(node.Description);
+        string tags = string.Join(",", node.Tags);
+        string rels = string.Join(", ", node.Relations.SelectMany(r => r.Value.Select(t => $"{r.Key}:{t.Id}")));
         _sb.AppendLine($"| {level} | {Escape(node.Id)} | {Escape(node.Name)} | {desc} | {tags} | {rels} |");
     }
     public void End() { }

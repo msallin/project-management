@@ -15,8 +15,8 @@ public class PlantUmlWbsVisitor : IProjectVisitor, IResultProvider
     }
     public void Visit(TaskNode node, int level)
     {
-        var id = Escape(node.Id);
-        var name = Escape(node.Name);
+        string id = Escape(node.Id);
+        string name = Escape(node.Name);
         _sb.Append('*', level + 1);
         if (node.Tags.GetColor(out string? color))
         {

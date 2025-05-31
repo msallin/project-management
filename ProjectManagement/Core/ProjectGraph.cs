@@ -41,8 +41,8 @@ public partial class ProjectGraph
     {
         EnsureNodeExists(fromId);
         EnsureNodeExists(toId);
-        var from = _nodes[fromId];
-        var to = _nodes[toId];
+        TaskNode from = _nodes[fromId];
+        TaskNode to = _nodes[toId];
         if (CreatesCycle(from, to))
         {
             throw new InvalidOperationException("Adding this dependency would create a cycle.");
@@ -73,13 +73,13 @@ public partial class ProjectGraph
         stack.Push(start);
         while (stack.Count > 0)
         {
-            var node = stack.Pop();
+            TaskNode node = stack.Pop();
             if (node.Id == target.Id)
             {
                 return true;
             }
 
-            foreach (var dep in node.Dependencies)
+            foreach (TaskNode dep in node.Dependencies)
             {
                 if (visited.Add(dep.Id))
                 {
@@ -97,9 +97,9 @@ public partial class ProjectGraph
         var sorted = new List<TaskNode>();
         while (queue.Count > 0)
         {
-            var node = queue.Dequeue();
+            TaskNode node = queue.Dequeue();
             sorted.Add(node);
-            foreach (var child in _nodes.Values.Where(n => n.Dependencies.Contains(node)))
+            foreach (TaskNode? child in _nodes.Values.Where(n => n.Dependencies.Contains(node)))
             {
                 inDegree[child]--;
                 if (inDegree[child] == 0)
@@ -123,7 +123,7 @@ public partial class ProjectGraph
         visitor.Start();
 
         // Iterate only over maintained root set
-        foreach (var root in _roots.OrderBy(n => n.Id))
+        foreach (TaskNode? root in _roots.OrderBy(n => n.Id))
         {
             root.Accept(visitor);
         }
@@ -135,7 +135,7 @@ public partial class ProjectGraph
     public string ExportTopologicalSort(IProjectVisitor visitor)
     {
         visitor.Start();
-        foreach (var node in TopologicalSort())
+        foreach (TaskNode node in TopologicalSort())
         {
             visitor.Visit(node, 0);
         }

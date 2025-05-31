@@ -13,8 +13,8 @@ public class PlantUmlGanttVisitor : IProjectVisitor, IResultProvider
 
     public void Visit(TaskNode node, int level)
     {
-        var id = Escape(node.Id);
-        var name = Escape(node.Name);
+        string id = Escape(node.Id);
+        string name = Escape(node.Name);
         _sb.Append($"[{id} {name}] lasts {node.Duration.TotalDays} day");
         if (node.Tags.GetColor(out string? color))
         {
@@ -22,15 +22,15 @@ public class PlantUmlGanttVisitor : IProjectVisitor, IResultProvider
         }
         _sb.AppendLine();
 
-        foreach (var rel in node.Relations)
+        foreach (KeyValuePair<string, HashSet<TaskNode>> rel in node.Relations)
         {
-            foreach (var tgt in rel.Value)
+            foreach (TaskNode tgt in rel.Value)
             {
                 _sb.AppendLine($"[{id} {name}] {rel.Key} [{Escape(tgt.Id)} {Escape(tgt.Name)}]");
             }
         }
 
-        foreach (var dep in node.Dependencies)
+        foreach (TaskNode dep in node.Dependencies)
         {
             _sb.AppendLine($"[{Escape(dep.Id)} {Escape(dep.Name)}] -> [{id} {name}]");
         }

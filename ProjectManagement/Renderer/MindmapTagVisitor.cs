@@ -18,12 +18,12 @@ public class MindmapTagVisitor : IProjectVisitor, IResultProvider
     public void Visit(TaskNode node, int level)
     {
         // Prepare the task label: "ID - Name"
-        var label = $"{Escape(node.Id)} - {Escape(node.Name)}";
+        string label = $"{Escape(node.Id)} - {Escape(node.Name)}";
 
         // If the task has tags, emit under each
         if (node.Tags != null && node.Tags.Any())
         {
-            foreach (var tag in node.Tags)
+            foreach (string tag in node.Tags)
             {
                 // Skip control tags
                 if (tag.IsControlTag())

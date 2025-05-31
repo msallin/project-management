@@ -19,30 +19,30 @@ namespace ProjectManagement.Renderer
 
         public void Visit(TaskNode node, int level)
         {
-            var nodeLabel = GetLabel(node.Id, node.Name);
-            var fill = node.Tags.GetColor(out string? color) ? color : "white";
+            string nodeLabel = GetLabel(node.Id, node.Name);
+            string? fill = node.Tags.GetColor(out string? color) ? color : "white";
             _sb.AppendLine($"    {nodeLabel} [style=filled, fillcolor=\"{fill}\", color=\"black\"];");
 
             // Parent-child "contains" edges
-            foreach (var child in node.Children)
+            foreach (TaskNode child in node.Children)
             {
-                var childLabel = GetLabel(child.Id, child.Name);
+                string childLabel = GetLabel(child.Id, child.Name);
                 _sb.AppendLine($"    {nodeLabel} -> {childLabel} [label=\"contains\"];");
             }
 
             // Dependency edges
-            foreach (var dep in node.Dependencies)
+            foreach (TaskNode dep in node.Dependencies)
             {
-                var depLabel = GetLabel(dep.Id, dep.Name);
+                string depLabel = GetLabel(dep.Id, dep.Name);
                 _sb.AppendLine($"    {depLabel} -> {nodeLabel} [style=dashed, label=\"dependsOn\"];");
             }
 
             // Additional relations
-            foreach (var rel in node.Relations)
+            foreach (KeyValuePair<string, HashSet<TaskNode>> rel in node.Relations)
             {
-                foreach (var target in rel.Value)
+                foreach (TaskNode target in rel.Value)
                 {
-                    var targetLabel = GetLabel(target.Id, target.Name);
+                    string targetLabel = GetLabel(target.Id, target.Name);
                     _sb.AppendLine($"    {nodeLabel} -> {targetLabel} [label=\"{Escape(rel.Key)}\"];");
                 }
             }

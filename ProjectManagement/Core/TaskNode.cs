@@ -28,7 +28,7 @@ public class TaskNode
         Description = description;
         if (tags != null)
         {
-            foreach (var tag in tags)
+            foreach (string tag in tags)
             {
                 Tags.Add(tag);
             }
@@ -39,7 +39,7 @@ public class TaskNode
 
     public void AddRelation(string relationType, TaskNode target)
     {
-        if (!Relations.TryGetValue(relationType, out var set))
+        if (!Relations.TryGetValue(relationType, out HashSet<TaskNode>? set))
         {
             set = [];
             Relations[relationType] = set;
@@ -50,7 +50,7 @@ public class TaskNode
     public void Accept(IProjectVisitor visitor, int level = 1)
     {
         visitor.Visit(this, level);
-        foreach (var child in Children.OrderBy(c => c.Id))
+        foreach (TaskNode? child in Children.OrderBy(c => c.Id))
         {
             child.Accept(visitor, level + 1);
         }
