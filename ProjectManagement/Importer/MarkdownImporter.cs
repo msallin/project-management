@@ -5,10 +5,10 @@ using ProjectManagement.Core;
 namespace ProjectManagement.Importer
 {
     /// <summary>
-    /// Imports a single markdown file where:
+    /// Imports a single Markdown file where:
     ///  - #...   = WBS hierarchy (1, 1.1, 1.1.1, …)
     ///  - paragraphs → Description
-    ///  - @(X) or @(X,Y,Z) → one or more dependencies on tasks X, Y, Z
+    ///  - @(X,Y,…) → one or more dependencies on tasks X, Y, …
     ///  - #tag    → tag on the current task
     /// </summary>
     public class MarkdownImporter
@@ -34,11 +34,9 @@ namespace ProjectManagement.Importer
             var pendingDeps = new List<(string fromId, string toId)>();
             TaskNode? current = null;
 
-            // Matches @(X) or @(X,Y,Z) or @(X, Y, Z), where each X, Y, Z is digits-and-dots (e.g. "1", "1.2", "2.3.4", etc.)
-            // Group 1 will capture all of "1", or "1,2,3", or "1.2, 3.4, 5".
+            // Matches multi‐ID dependency patterns: @(1), @(1,2,3), @(1.1, 2.2,3.3), etc.
             var depRegex = new Regex(@"@\(\s*([0-9\.]+(?:\s*,\s*[0-9\.]+)*)\s*\)");
-
-            // Matches tags like #someTagName (no whitespace before the #, but not inside a word)
+            // Matches tags anywhere (including headings), e.g. #tagName or #some_tag:subtag
             var tagRegex = new Regex(@"(?<!\S)#([A-Za-z0-9_:]+)");
 
             foreach (string raw in lines)
@@ -49,22 +47,31 @@ namespace ProjectManagement.Importer
                     continue;
                 }
 
-                // 1) Heading detection: lines beginning with one or more '#' then a space, then text
+                // 1) Detect Markdown heading lines: "### Heading Text..."
                 Match m = Regex.Match(line, @"^(#+)\s+(.*)$");
                 if (m.Success)
                 {
-                    int level = m.Groups[1].Value.Length;
-                    string rest = m.Groups[2].Value.Trim();
-                    string id, title;
+                    int level = m.Groups[1].Value.Length;       // Number of '#' chars
+                    string rest = m.Groups[2].Value.Trim();     // Everything after the "#"s and space
 
-                    // 1a) If the heading starts with a numeric ID (1 or 1.2 or 1.2.3, possibly followed by a dot), parse it out
-                    Match numM = Regex.Match(rest, @"^(\d+(?:\.\d+)*)(?:\.)?\s+(.*)$");
+                    var headingTags = new List<string>();
+                    foreach (Match tm in tagRegex.Matches(rest))
+                    {
+                        headingTags.Add(tm.Groups[1].Value);
+                    }
+                    // Remove all "#tagName" fragments from the heading text
+                    string restWithoutTags = tagRegex.Replace(rest, "").Trim();
+
+                    // Now parse out numeric ID prefix (if provided), using the cleaned‐up text
+                    string id, title;
+                    Match numM = Regex.Match(restWithoutTags, @"^(\d+(?:\.\d+)*)(?:\.)?\s+(.*)$");
                     if (numM.Success)
                     {
-                        id = numM.Groups[1].Value;           // e.g. "1" or "1.2.3"
-                        title = numM.Groups[2].Value.Trim();  // e.g. "PSVP Entkopplung" (no leading "1.")
+                        // Explicit numeric prefix exists (e.g. "1" or "1.2.3", possibly followed by a dot)
+                        id = numM.Groups[1].Value;                // e.g. "1" or "1.2.3"
+                        title = numM.Groups[2].Value.Trim();       // e.g. "Requirements Review" (no tags, no "1.")
 
-                        // Sync levelCounters with the segments in 'id'
+                        // Update levelCounters based on the numeric segments
                         int[] segs = id
                                      .Split('.', StringSplitOptions.RemoveEmptyEntries)
                                      .Select(int.Parse)
@@ -76,17 +83,16 @@ namespace ProjectManagement.Importer
                     }
                     else
                     {
-                        // 1b) No numeric prefix → auto-generate "1", "1.1", "1.1.1", based on counters
+                        // No explicit numeric prefix → auto‐generate WBS ID from levelCounters
                         int prevCount = levelCounters.TryGetValue(level, out int cnt) ? cnt : 0;
                         levelCounters[level] = prevCount + 1;
-
-                        title = rest;
+                        title = restWithoutTags;   // entire heading text, minus tags
                         id = string.Join(".",
                                   Enumerable.Range(1, level)
                                             .Select(l => levelCounters[l].ToString()));
                     }
 
-                    // Clear counters and headingStack entries for levels deeper than the current
+                    // Clear counters and headingStack entries for deeper levels
                     foreach (int d in levelCounters.Keys.Where(l => l > level).ToList())
                     {
                         levelCounters.Remove(d);
@@ -97,11 +103,16 @@ namespace ProjectManagement.Importer
                         headingStack.Remove(d);
                     }
 
-                    // Create the TaskNode
+                    // Create the TaskNode (with the sanitized title, no tags in it)
                     current = graph.AddTask(id, title);
-                    headingStack[level] = current;
+                    // Immediately apply any tags that were on the heading
+                    foreach (string tag in headingTags)
+                    {
+                        current.AddTag(tag);
+                    }
 
-                    // Link to its parent (if level > 1)
+                    // Push this node into the headingStack so children can link to it
+                    headingStack[level] = current;
                     if (level > 1 && headingStack.TryGetValue(level - 1, out TaskNode? parent))
                     {
                         graph.AddChild(parent.Id, id);
@@ -109,12 +120,10 @@ namespace ProjectManagement.Importer
                 }
                 else if (current != null)
                 {
-                    // 2) Collect dependencies: each @(...) block may contain one or more IDs, comma-separated
+                    // 2) Collect dependencies: each @(…) block may contain one or more IDs
                     foreach (Match dm in depRegex.Matches(line))
                     {
-                        // dm.Groups[1].Value is e.g. "1" or "1,2,3" or "1.2, 3.4"
-                        string inside = dm.Groups[1].Value;
-                        // Split on comma, trim each piece, and add as separate dependency
+                        string inside = dm.Groups[1].Value; // e.g. "1", or "1,2,3", or "1.1, 2.2"
                         foreach (string rawId in inside.Split(','))
                         {
                             string fromId = rawId.Trim();
@@ -125,13 +134,13 @@ namespace ProjectManagement.Importer
                         }
                     }
 
-                    // 3) Collect tags (#tagName)
+                    // 3) Collect any tags in non‐heading lines
                     foreach (Match tm in tagRegex.Matches(line))
                     {
                         current.AddTag(tm.Groups[1].Value);
                     }
 
-                    // 4) Remove all @(...) and #tags from the line before appending to description
+                    // 4) Remove all @(…) and #tagName from the line before appending to Description
                     string cleaned = depRegex.Replace(line, "");
                     cleaned = tagRegex.Replace(cleaned, "").Trim();
                     if (!string.IsNullOrEmpty(cleaned))
@@ -143,7 +152,7 @@ namespace ProjectManagement.Importer
                 }
             }
 
-            // 5) Resolve all collected dependencies
+            // 5) Finally, wire up all collected dependencies
             foreach ((string fromId, string toId) in pendingDeps)
             {
                 if (graph.TryGetTask(fromId, out _))
