@@ -13,7 +13,7 @@ public class TaskNode
 
     public TimeSpan Duration { get; set; } = TimeSpan.FromDays(1);
 
-    public HashSet<string> Tags { get; } = [];
+    public TagsCollection Tags { get; } = [];
 
     public List<TaskNode> Dependencies { get; } = [];
 

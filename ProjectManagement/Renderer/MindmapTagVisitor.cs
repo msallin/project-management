@@ -21,16 +21,11 @@ public class MindmapTagVisitor : IProjectVisitor, IResultProvider
         string label = $"{Escape(node.Id)} - {Escape(node.Name)}";
 
         // If the task has tags, emit under each
-        if (node.Tags != null && node.Tags.Any())
+        IEnumerable<string> tags = node.Tags.GetNonControlTags();
+        if (tags.Any())
         {
             foreach (string tag in node.Tags)
             {
-                // Skip control tags
-                if (tag.IsControlTag())
-                {
-                    continue;
-                }
-
                 // Emit the tag header once
                 if (_emittedTags.Add(tag))
                 {
@@ -38,7 +33,6 @@ public class MindmapTagVisitor : IProjectVisitor, IResultProvider
                 }
 
                 AddTask(node, label);
-
             }
         }
         else
