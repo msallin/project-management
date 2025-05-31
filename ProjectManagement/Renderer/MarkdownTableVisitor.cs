@@ -17,6 +17,11 @@ namespace ProjectManagement.Renderer
 
         public void Visit(TaskNode node, int level)
         {
+            if (node.IsMilestone)
+            {
+                return; 
+            }
+
             // Ensure Description is never null
             string rawDesc = node.Description ?? string.Empty;
 

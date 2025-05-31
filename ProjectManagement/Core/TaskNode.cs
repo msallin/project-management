@@ -35,6 +35,8 @@ public class TaskNode
         }
     }
 
+    public bool IsMilestone => Tags.IsMilestone(out _);
+
     public void AddTag(string value) => Tags.Add(value);
 
     public void AddRelation(string relationType, TaskNode target)
