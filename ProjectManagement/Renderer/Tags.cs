@@ -6,10 +6,18 @@ namespace ProjectManagement.Renderer
     {
         private const string _colorTag = "color:";
 
-        public static readonly ImmutableHashSet<string> ControlTags = [_colorTag];
+        private const string _milestoneTag = "milestone:";
+
+        public static readonly ImmutableHashSet<string> ControlTags = [_colorTag, _milestoneTag];
 
         public static bool IsControlTag(this string tag) 
-            => tag.StartsWith(_colorTag, StringComparison.OrdinalIgnoreCase);
+            => ControlTags.Any(c => tag.StartsWith(c, StringComparison.OrdinalIgnoreCase));
+
+        public static bool IsMilestone(this IEnumerable<string> tags, out string? name)
+        {
+            name = tags.FirstOrDefault(t => t.StartsWith(_milestoneTag))?[(_milestoneTag.Length)..];
+            return name != null;
+        }
 
         public static bool GetColor(this IEnumerable<string> tags, out string? color)
         {
