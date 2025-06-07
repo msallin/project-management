@@ -24,7 +24,6 @@ jobs:
       run: dotnet build --no-restore ProjectManagement.sln
     - name: Test with coverage
       run: |
-        mkdir -p TestResults/coverage
         dotnet test ProjectManagement.sln --no-build --logger "trx;LogFileName=testresults.trx" \
           --results-directory TestResults \
           /p:CollectCoverage=true \
@@ -32,7 +31,7 @@ jobs:
           /p:CoverletOutputFormat=cobertura
     - name: Generate coverage report
       run: >-
-        ~/.dotnet/tools/reportgenerator -reports:TestResults/coverage/coverage.cobertura.xml
+        ~/.dotnet/tools/reportgenerator -reports:ProjectManagement.Tests/TestResults/coverage/coverage.cobertura.xml
         -targetdir:coveragereport -reporttypes:Html;MarkdownSummary
     - name: Upload coverage artifact
       uses: actions/upload-artifact@v4
@@ -52,7 +51,7 @@ jobs:
     - name: Enforce minimum coverage
       if: always()
       run: |
-        line_rate=$(grep -o 'line-rate="[0-9.]*"' TestResults/coverage/coverage.cobertura.xml | head -n1 | cut -d'"' -f2)
+        line_rate=$(grep -o 'line-rate="[0-9.]*"' ProjectManagement.Tests/TestResults/coverage/coverage.cobertura.xml | head -n1 | cut -d'"' -f2)
         coverage=$(awk "BEGIN {print ${line_rate}*100}")
         echo "Line coverage: ${coverage}%"
         awk -v cov=${coverage} 'BEGIN { if (cov < 90) exit 1 }'
