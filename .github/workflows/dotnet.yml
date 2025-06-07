@@ -29,8 +29,6 @@ jobs:
         /p:CollectCoverage=true
         /p:CoverletOutput=TestResults/coverage/
         /p:CoverletOutputFormat=cobertura
-        /p:Threshold=90
-        /p:ThresholdType=line
     - name: Generate coverage report
       run: >-
         reportgenerator -reports:TestResults/coverage/coverage.cobertura.xml
@@ -50,4 +48,11 @@ jobs:
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         path: coveragereport/Summary.md
+    - name: Enforce minimum coverage
+      if: always()
+      run: |
+        line_rate=$(grep -o 'line-rate="[0-9.]*"' TestResults/coverage/coverage.cobertura.xml | head -n1 | cut -d'"' -f2)
+        coverage=$(awk "BEGIN {print ${line_rate}*100}")
+        echo "Line coverage: ${coverage}%"
+        awk -v cov=${coverage} 'BEGIN { if (cov < 90) exit 1 }'
 
